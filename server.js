@@ -1,42 +1,103 @@
-'use strict';
+import express from 'express';
+import bodyParser from 'body-parser';
+import mongoose from 'mongoose';
+import Bear from './app/models/bear.babel';
 
-var _express = require('express');
-
-var _express2 = _interopRequireDefault(_express);
-
-var _bodyParser = require('body-parser');
-
-var _bodyParser2 = _interopRequireDefault(_bodyParser);
-
-var _mongoose = require('mongoose');
-
-var _mongoose2 = _interopRequireDefault(_mongoose);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var app = (0, _express2.default)();
-var PORT = process.env.PORT || 8080;
+const app = express();
+const PORT = process.env.PORT || 8080;
 
 // express router for API calls
-var router = _express2.default.Router();
+const router = express.Router();
 
 // Database setup
-_mongoose2.default.connect('localhost:27017');
+mongoose.connect('localhost:27017');
 
 // allow access to data from POST
-app.use(_bodyParser2.default.urlencoded({ extended: true }));
-app.use(_bodyParser2.default.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
+// API ROUTES
+// =====================================
+
+// middleware to use for all requests
+router.use(function(req, res, next) {
+    // do logging
+    console.log('Something is happening.');
+	console.log(req.body);
+    next(); // make sure we go to the next routes and don't stop here
+});
 // initial test
-router.get('/', function (req, res) {
+router.get('/', (req, res) => {
 	res.json({ message: 'hooray! welcome to our api!' });
 });
 
-// TODO: more API Calls here
+router.route('/bears')
+    // add bear
+	.post((req, res) => {
+        
+        let bear = new Bear();      // create a new instance of the Bear model
+        bear.name = req.body.name;  // set the bears name (comes from the request)
+
+        // save the bear and check for errors
+        bear.save((err) => {
+			if (err)
+				res.send(err);
+			const message = 'Bear ' + bear.name + ' created!';
+
+			res.json({ message: message });
+		});
+
+	})
+	// Get all bears
+	.get((req, res) => {
+		Bear.find((err, bears) => {
+			if (err) 
+				res.send(err);
+			res.json(bears);
+		});
+	})
+	
+router.route('/bears/:bear_id')
+	// get bear by id
+	.get((req, res) => {
+		Bear.findById(req.params.bear_id, (err, bear) => {
+			if (err)
+				res.send(err);
+			res.json(bear);
+		});
+	})
+	.put((req, res) => {
+		Bear.findById(req.params.bear_id, (err, bear) => {
+			if (err) 
+				res.send(err);
+			const oldName = bear.name;
+			bear.name = req.body.name;
+
+			bear.save((err) => {
+				if (err)
+					res.send(err);
+				const message = 'Bear ' + oldName + ' updated to name ' + bear.name;
+				res.json({ message: message });
+			});
+
+		});
+	})
+	.delete((req, res) => {
+		Bear.remove({
+			_id: req.params.bear_id
+			}, (err, bear) => {
+				if (err)
+					res.send(err);
+				const message = 'Successfully removed';
+				res.json({ message: message });
+			});
+	});
+
+
 
 // REGISTER ROUTES
 app.use('/api', router);
 
-app.listen(PORT, function () {
+app.listen(PORT, () => {
 	console.log('Listening on PORT', PORT);
 });
