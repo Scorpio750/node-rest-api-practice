@@ -31,6 +31,9 @@ _mongoose2.default.connect('localhost:27017');
 app.use(_bodyParser2.default.urlencoded({ extended: true }));
 app.use(_bodyParser2.default.json());
 
+// static assets
+app.use(_express2.default.static('public'));
+
 // API ROUTES
 // =====================================
 
@@ -93,7 +96,7 @@ router.route('/bears/:bear_id')
 		_id: req.params.bear_id
 	}, function (err, bear) {
 		if (err) res.send(err);
-		var message = 'Successfully removed bear ' + bear.name;
+		var message = 'Successfully removed';
 		res.json({ message: message });
 	});
 });

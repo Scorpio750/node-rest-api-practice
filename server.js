@@ -16,6 +16,9 @@ mongoose.connect('localhost:27017');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+// static assets
+app.use(express.static('public'));
+
 // API ROUTES
 // =====================================
 
@@ -34,7 +37,7 @@ router.get('/', (req, res) => {
 router.route('/bears')
     // add bear
 	.post((req, res) => {
-        
+
         let bear = new Bear();      // create a new instance of the Bear model
         bear.name = req.body.name;  // set the bears name (comes from the request)
 
@@ -51,12 +54,12 @@ router.route('/bears')
 	// Get all bears
 	.get((req, res) => {
 		Bear.find((err, bears) => {
-			if (err) 
+			if (err)
 				res.send(err);
 			res.json(bears);
 		});
 	})
-	
+
 router.route('/bears/:bear_id')
 	// get bear by id
 	.get((req, res) => {
@@ -68,7 +71,7 @@ router.route('/bears/:bear_id')
 	})
 	.put((req, res) => {
 		Bear.findById(req.params.bear_id, (err, bear) => {
-			if (err) 
+			if (err)
 				res.send(err);
 			const oldName = bear.name;
 			bear.name = req.body.name;
